@@ -40,22 +40,20 @@
                             var reader = new FileReader();
                             reader.onload = function(e) {
                                 imagesArray.push(e.target.result);
-                                $('#imagenesGuardadas').append('<div class="col-4"><button style="height: 30px;width: 30px" class="borrar" data-id="' + i + '">X</button><img class="img-fluid" src="' + e.target.result + '" ></div>');
+                                $('#imagenesGuardadas').append('<div class="col-4"><button style="height: 30px;width: 30px" class="borrar" data-id="' + (cantidad + i) + '">X</button><img class="img-fluid" src="' + e.target.result + '" ></div>');
                             };
                             reader.readAsDataURL(file);
-                            cantidad++;
                         }
+                        cantidad += imagesToAdd;
                         $('#numero').text(cantidad);
                     } else {
                         alert('El número de imágenes debe ser entre 1 y ' + max);
                     }
 
                     if (cantidad >= max) {
-                        alert('No se puede agregar más de ' + max + ' imágenes');
                         $("#subir").attr("disabled", true);
                     }
                 });
-
 
                 $(document).on('click', '.borrar', function() {
                     var id = $(this).data('id');
@@ -63,8 +61,13 @@
                     $(this).parent().remove();
                     cantidad--;
                     $('#numero').text(cantidad);
+
+                    if (cantidad < max) {
+                        $("#subir").attr("disabled", false);
+                    }
                 });
             });
+
         </script>
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
