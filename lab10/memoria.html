@@ -38,7 +38,7 @@
         <script>
             $(document).ready(function() {
                 var imagesArray = [];
-                var max=1
+                var max = 1
 
                 $('#subir').click(function() {
                     var files = $('#imagenInput').get(0).files;
@@ -48,7 +48,7 @@
                             var reader = new FileReader();
                             reader.onload = function(e) {
                                 imagesArray.push(e.target.result);
-                                $('#imagenesGuardadas').append('<button style="height: 30px;width: 30px" id="borrar" >X</button><div class="col-4"><img class="img-fluid" src="' + e.target.result + '" /></div>');
+                                $('#imagenesGuardadas').append('<button style="height: 30px;width: 30px" class="borrar" data-id="' + i + '">X</button><div class="col-4"><img class="img-fluid" src="' + e.target.result + '" /></div>');
                             }
                             reader.readAsDataURL(file);
                             max=max+1
@@ -58,17 +58,22 @@
                     }
 
                     if (max>15){
-
                         alert('El número de imágenes debe ser entre 1 y 15');
                         $("#subir").attr("disabled", true)
-
                     }
-
+                });
+                $(document).on('click', '.borrar', function(){
+                    var id = $(this).data('id');
+                    imagesArray.splice(id, 1);
+                    $(this).next().remove();
+                    $(this).remove(); 
                 });
             });
         </script>
 
-        
+
+
+
 
 
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
