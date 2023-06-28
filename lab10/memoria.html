@@ -11,9 +11,20 @@
               crossorigin="anonymous">
     </head>
     <body>
-        <input type="file" id="imageInput" accept=".png" multiple/>
-        <button id="uploadButton">Subir imágenes</button>
-        <div id="imagesContainer"></div>
+        <div class="container mt-4">
+            <div class="row">
+                <div class="col-12">
+                    <div class="custom-file mb-3">
+                        <input type="file" class="custom-file-input" id="imageInput" accept=".png" multiple>
+                        <label class="custom-file-label" for="imageInput">Seleccionar imágenes...</label>
+                    </div>
+                    <button id="uploadButton" class="btn btn-primary">Subir imágenes</button>
+                </div>
+                <div class="col-12 mt-4">
+                    <div id="imagesContainer" class="row"></div>
+                </div>
+            </div>
+        </div>
 
         <script>
             $(document).ready(function() {
@@ -27,7 +38,7 @@
                             var reader = new FileReader();
                             reader.onload = function(e) {
                                 imagesArray.push(e.target.result);
-                                $('#imagesContainer').append('<img src="' + e.target.result + '" />');
+                                $('#imagesContainer').append('<div class="col-4"><img class="img-fluid" src="' + e.target.result + '" /></div>');
                             }
                             reader.readAsDataURL(file);
                         }
@@ -37,6 +48,7 @@
                 });
             });
         </script>
+
 
         <h1>El Juego de la Memoria</h1>
         <br>
@@ -50,3 +62,4 @@
 
     </body>
 </html>
+
