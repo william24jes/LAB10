@@ -29,6 +29,7 @@
                 </div>
                 <div class="col-12 mt-4">
                     <div id="imagenesGuardadas" class="row"></div>
+
                 </div>
             </div>
         </div>
@@ -47,7 +48,7 @@
                             var reader = new FileReader();
                             reader.onload = function(e) {
                                 imagesArray.push(e.target.result);
-                                $('#imagenesGuardadas').append('<div class="col-4"><img class="img-fluid" src="' + e.target.result + '" /></div>');
+                                $('#imagenesGuardadas').append('<button style="height: 30px;width: 30px" id="borrar" >X</button><div class="col-4"><img class="img-fluid" src="' + e.target.result + '" /></div>');
                             }
                             reader.readAsDataURL(file);
                             max=max+1
