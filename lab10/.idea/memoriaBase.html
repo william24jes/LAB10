@@ -9,8 +9,8 @@
         crossorigin="anonymous">
   <style>
     .card {
-      width: 100px;
-      height: 100px;
+      width: 150px;  /*era 100px*/
+      height: 150px;  /*era 100px*/
       background-color: blue;
       margin: 5px;
       display: inline-flex;
@@ -27,6 +27,12 @@
       max-width: 100%;
       max-height: 100%;
       display: none;
+    }
+    #boardContainer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 70vh;  /*ajusta esto según tus necesidades*/
     }
   </style>
 </head>
@@ -49,7 +55,9 @@
 
 <div class="container mt-4">
   <button id="empezarJuego" class="btn btn-primary" style="display: none;">Empezar juego</button>
-  <div id="tablero"></div>
+  <div id="boardContainer">
+    <div id="tablero"></div>
+  </div>
 </div>
 
 <script>
@@ -129,6 +137,13 @@
       var shuffledImages = imagesArray.concat(imagesArray);
       shuffleArray(shuffledImages);
       createBoard(shuffledImages);
+      $("#empezarJuego").css("display", "block"); // Show "Empezar Juego" button after board creation
+    });
+    $("#empezarJuego").click(function() {
+      gameStarted = true; // game is started
+      $('.card img').hide(); // Hide all cards
+      lockCards = false; // Unlock all cards
+      lastTwoCards = []; // Clear last two opened cards
     });
 
     function createBoard(images) {
@@ -149,6 +164,7 @@
       }
 
       $('.card').click(function () {
+        if (!gameStarted || lockCards) return; // Don't process click if game is not started or cards are locked
         if (lockCards) return;
 
         var img = $(this).find('img');
@@ -176,11 +192,31 @@
     }
 
     function getBoardDimensions(n) {
-      var r = Math.floor(Math.sqrt(n));
-      while (n % r !== 0) {
-        r--;
+      var rows, cols;
+
+      // Si el número de imágenes es un cuadrado perfecto
+      if (Math.sqrt(n) % 1 === 0) {
+        cols = Math.sqrt(n);
+        rows = Math.sqrt(n);
+      } else {
+        rows = Math.ceil(Math.sqrt(n));
+        cols = Math.ceil(n / rows);
       }
-      return [n / r, r];
+
+      // Asegurarse de que el número de columnas siempre sea par. Si no, aumentar en uno.
+      if (cols % 2 !== 0) {
+        cols += 1;
+        rows = n / cols;
+      }
+
+      // Si filas son menos que columnas, intercambiar
+      if (rows < cols) {
+        var temp = cols;
+        cols = rows;
+        rows = temp;
+      }
+
+      return [rows, cols];
     }
 
     function shuffleArray(array) {
