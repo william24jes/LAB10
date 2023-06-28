@@ -10,8 +10,8 @@
               crossorigin="anonymous">
         <style>
             .card {
-                width: 100px;
-                height: 100px;
+                width: 50px;
+                height: 50px;
                 background-color: blue;
                 margin: 5px;
                 display: inline-flex;
@@ -188,8 +188,10 @@
                         var fila = $('<div class="row"></div>');
                         for (var c = 0; c < columns; c++) {
                             var columna = $('<div class="col card"></div>');
+                            columna.css('padding-top', (100 / columnas) + '%');
                             columna.data('index', cardIndex++);
                             fila.append(columna);
+
                         }
                         tablero.append(fila);
                     }
@@ -207,7 +209,7 @@
                     cards.each(function () {
                         var randomPosition = Math.floor(Math.random() * imagesArray.length);
                         $(this).css('background-image', 'url("' + imagesArray[randomPosition] + '")');
-                        $(this).css('background-size', '100px 100px');
+                        $(this).css('background-size', '50px 100px');
                         imagesArray.splice(randomPosition, 1);
                     });
                 }
