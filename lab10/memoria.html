@@ -48,7 +48,7 @@
                             var reader = new FileReader();
                             reader.onload = function(e) {
                                 imagesArray.push(e.target.result);
-                                $('#imagenesGuardadas').append('<button style="height: 30px;width: 30px" class="borrar" data-id="' + i + '">X</button><div class="col-4"><img class="img-fluid" src="' + e.target.result + '" /></div>');
+                                $('#imagenesGuardadas').append('<div class="col-4"><button style="height: 30px;width: 30px" class="borrar" data-id="' + i + '">X</button><div class="col-4"><img style="height: 300px;width: 400px" class="img-fluid" src="' + e.target.result + '" ></div></div>');
                             }
                             reader.readAsDataURL(file);
                             max=max+1
