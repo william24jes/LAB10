@@ -22,13 +22,13 @@
                         <h1>El Juego de la Memoria</h1>
                         <br>
                         <h6>Total de imágenes seleccionadas: </h6>
-                        <input type="file" class="custom-file-input" id="imageInput" accept=".png" multiple>
-                        <label class="custom-file-label" for="imageInput">Seleccionar imágenes...</label>
+                        <input type="file" class="custom-file-input" id="imagenInput" accept=".png" multiple>
+                        <label class="custom-file-label" for="imagenInput">Seleccionar imágenes...</label>
                     </div>
-                    <button id="uploadButton" class="btn btn-primary">Subir imágenes</button>
+                    <button id="subir" class="btn btn-primary">Subir imágenes</button>
                 </div>
                 <div class="col-12 mt-4">
-                    <div id="imagesContainer" class="row"></div>
+                    <div id="imagenesGuardadas" class="row"></div>
                 </div>
             </div>
         </div>
@@ -38,15 +38,15 @@
             $(document).ready(function() {
                 var imagesArray = [];
 
-                $('#uploadButton').click(function() {
-                    var files = $('#imageInput').get(0).files;
+                $('#subir').click(function() {
+                    var files = $('#imagenInput').get(0).files;
                     if (files.length > 0 && files.length <= 15) {
                         for (var i = 0; i < files.length; i++) {
                             var file = files[i];
                             var reader = new FileReader();
                             reader.onload = function(e) {
                                 imagesArray.push(e.target.result);
-                                $('#imagesContainer').append('<div class="col-4"><img class="img-fluid" src="' + e.target.result + '" /></div>');
+                                $('#imagenesGuardadas').append('<div class="col-4"><img class="img-fluid" src="' + e.target.result + '" /></div>');
                             }
                             reader.readAsDataURL(file);
                         }
@@ -54,8 +54,19 @@
                         alert('El número de imágenes debe ser entre 1 y 15');
                     }
 
+
                 });
             });
+        </script>
+
+        <script>
+            /*var files = $('#imagenesGuardadas').get(0).files;
+
+            if (files>0 && files<16){
+                $('#imagenesGuardadas').append('<div class="col-4"><img class="img-fluid" src="' + e.target.result + '" /></div>');
+            }else{
+                alert('El número de imágenes debe ser entre 1 y 15');
+            }*/
         </script>
 
         
