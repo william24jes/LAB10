@@ -4,14 +4,13 @@
   <meta charset="UTF-8">
   <title>Juego de Memoria</title>
   <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.1/jquery.validate.min.js"></script>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
         crossorigin="anonymous">
   <style>
     .card {
-      width: 50px;
-      height: 50px;
+      width: 100px;
+      height: 100px;
       background-color: blue;
       margin: 5px;
       display: inline-flex;
@@ -27,6 +26,7 @@
       height: auto;
       max-width: 100%;
       max-height: 100%;
+      display: none;
     }
   </style>
 </head>
@@ -56,6 +56,8 @@
   $(document).ready(function () {
     var imagesArray = [];
     var max = 15;
+    var lastTwoCards = [];
+    var lockCards = false;
 
     $('#subir').click(function () {
       var files = $('#imagenInput').get(0).files;
@@ -76,7 +78,7 @@
                 addedImagesCount++;
                 $('#imagenesGuardadas').append('<div class="col-4"><button style="height: 30px;width: 30px" class="borrar" data-id="' + (imagesArray.length - 1) + '">X</button><img class="img-fluid" src="' + image + '" ></div>');
               }
-              updateSelectedImagesCount(); // Actualizar el número de imágenes seleccionadas
+              updateSelectedImagesCount();
               if (addedImagesCount === files.length) {
                 updateCreateButtonState();
               }
@@ -88,14 +90,13 @@
         alert('Por favor, selecciona entre 1 y ' + max + ' imágenes.');
       }
     });
+
     $(document).on('click', '.borrar', function () {
       var id = $(this).data('id');
-      imagesArray.splice(id, 1); // Eliminar la imagen del arreglo
+      imagesArray.splice(id, 1);
       $(this).parent().remove();
       updateSelectedImagesCount();
       updateCreateButtonState();
-
-      // Actualizar los valores de data-id en los botones de borrado
       $('.borrar').each(function(index) {
         $(this).data('id', index);
       });
@@ -123,8 +124,72 @@
       }
       return uniqueImages.length;
     }
-  });
 
+    $('#crear').click(function () {
+      var shuffledImages = imagesArray.concat(imagesArray);
+      shuffleArray(shuffledImages);
+      createBoard(shuffledImages);
+    });
+
+    function createBoard(images) {
+      var dimensions = getBoardDimensions(images.length);
+      var rows = dimensions[0];
+      var cols = dimensions[1];
+      for (var i = 0; i < rows; i++) {
+        var row = $('<div class="row"></div>');
+        for (var j = 0; j < cols; j++) {
+          if(images.length > 0){
+            var card = $('<div class="card"></div>');
+            var img = $('<img src="' + images.pop() + '">');
+            card.append(img);
+            row.append(card);
+          }
+        }
+        $('#tablero').append(row);
+      }
+
+      $('.card').click(function () {
+        if (lockCards) return;
+
+        var img = $(this).find('img');
+        img.show();
+
+        lastTwoCards.push(img);
+
+        if (lastTwoCards.length === 2) {
+          lockCards = true;
+          if (lastTwoCards[0].attr('src') === lastTwoCards[1].attr('src')) {
+            // If match, stay open
+            lastTwoCards = [];
+            lockCards = false;
+          } else {
+            // If not match, close after 1 second
+            setTimeout(function () {
+              lastTwoCards[0].hide();
+              lastTwoCards[1].hide();
+              lastTwoCards = [];
+              lockCards = false;
+            }, 1000);
+          }
+        }
+      });
+    }
+
+    function getBoardDimensions(n) {
+      var r = Math.floor(Math.sqrt(n));
+      while (n % r !== 0) {
+        r--;
+      }
+      return [n / r, r];
+    }
+
+    function shuffleArray(array) {
+      for (var i = array.length - 1; i > 0; i--) {
+        var j = Math.floor(Math.random() * (i + 1));
+        [array[i], array[j]] = [array[j], array[i]];
+      }
+    }
+  });
 </script>
 </body>
 </html>
