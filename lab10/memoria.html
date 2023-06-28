@@ -37,6 +37,7 @@
         <script>
             $(document).ready(function() {
                 var imagesArray = [];
+                var max=1
 
                 $('#subir').click(function() {
                     var files = $('#imagenInput').get(0).files;
@@ -49,24 +50,21 @@
                                 $('#imagenesGuardadas').append('<div class="col-4"><img class="img-fluid" src="' + e.target.result + '" /></div>');
                             }
                             reader.readAsDataURL(file);
+                            max=max+1
                         }
                     } else {
                         alert('El número de imágenes debe ser entre 1 y 15');
                     }
 
+                    if (max>15){
+
+                        alert('El número de imágenes debe ser entre 1 y 15');
+                        $("#subir").attr("disabled", true)
+
+                    }
 
                 });
             });
-        </script>
-
-        <script>
-            /*var files = $('#imagenesGuardadas').get(0).files;
-
-            if (files>0 && files<16){
-                $('#imagenesGuardadas').append('<div class="col-4"><img class="img-fluid" src="' + e.target.result + '" /></div>');
-            }else{
-                alert('El número de imágenes debe ser entre 1 y 15');
-            }*/
         </script>
 
         
