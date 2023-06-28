@@ -126,7 +126,7 @@
                     }
 
                     $(this).css('background-image', 'url("' + image + '")');
-                    $(this).css('background-size', '100px 100px');
+                    $(this).css('background-size', '100% 100%');
                     $(this).addClass('visible');
                     seleccionadas.push({
                         element: $(this),
@@ -209,7 +209,7 @@
                     cards.each(function () {
                         var randomPosition = Math.floor(Math.random() * imagesArray.length);
                         $(this).css('background-image', 'url("' + imagesArray[randomPosition] + '")');
-                        $(this).css('background-size', '50px 100px');
+                        $(this).css('background-size', '100% 100%');
                         imagesArray.splice(randomPosition, 1);
                     });
                 }

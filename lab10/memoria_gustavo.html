@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Juego de Memoria</title>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.1/jquery.validate.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+          crossorigin="anonymous">
+    <style>
+      .card {
+        width: 200px;  /* Modifica el tamaño de la tarjeta aquí */
+        height: 200px; /* Modifica el tamaño de la tarjeta aquí */
+        background-color: blue;
+        margin: 5px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .card img {
+        width: auto;
+        height: auto;
+        max-width: 100%;
+        max-height: 100%;
+      }
+
+      #tablero {
+        width: 300px;  /* Modifica el tamaño del tablero aquí */
+        height: 300px; /* Modifica el tamaño del tablero aquí */
+        margin: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container mt-4">
+      <h1>El Juego de la Memoria</h1>
+      <br>
+      <h6>Total de imágenes seleccionadas: <span id="numero">0</span></h6>
+      <div class="custom-file mb-3">
+        <input type="file" class="custom-file-input" id="imagenInput" accept=".png" multiple>
+        <label class="custom-file-label" for="imagenInput">Seleccionar imágenes...</label>
+      </div>
+      <button id="subir" class="btn btn-primary">Subir imágenes</button>
+      <button id="crear" class="btn btn-success" disabled>Crear tablero</button>
+    </div>
+
+    <div class="container mt-4">
+      <div id="imagenesGuardadas" class="row"></div>
+    </div>
+
+    <div class="container mt-4">
+      <button id="empezarJuego" class="btn btn-primary" style="display: none;">Empezar juego</button>
+      <div id="tablero"></div>
+    </div>
+
+    <script>
+      $(document).ready(function () {
+        var imagesArray = [];
+        var max = 15;
+        var cantidad = 0;
+        var filas = 0;
+        var columnas = 0;
+        var seleccionadas = [];
+        var bloquearClick = false;
+
+        $('#subir').click(function () {
+          var files = $('#imagenInput').get(0).files;
+          if (files.length > 0 && files.length <= max) {
+            if (cantidad + files.length > max) {
+              alert('El número máximo de imágenes permitidas es ' + max);
+              return;
+            }
+            for (var i = 0; i < files.length; i++) {
+              var file = files[i];
+              var reader = new FileReader();
+              reader.onload = function (e) {
+                imagesArray.push(e.target.result);
+                imagesArray.push(e.target.result); // Agregar una duplicada
+                $('#imagenesGuardadas').append('<div class="col-4"><button style="height: 30px;width: 30px" class="borrar" data-id="' + (cantidad + i) + '">X</button><img class="img-fluid" src="' + e.target.result + '" ></div>');
+              };
+              reader.readAsDataURL(file);
+            }
+            cantidad += files.length;
+            $('#numero').text(cantidad);
+
+            if (cantidad >= 2 && cantidad <= max) {
+              $("#crear").attr("disabled", false);
+            }
+          } else {
+            alert('El número de imágenes debe ser entre 1 y ' + max);
+          }
+        });
+
+        $(document).on('click', '.borrar', function () {
+          var id = $(this).data('id');
+          imagesArray.splice(id, 2); // Eliminar tanto la imagen como su duplicado
+          $(this).parent().remove();
+          cantidad--;
+          $('#numero').text(cantidad);
+
+          if (cantidad < 2 || cantidad > max) {
+            $("#crear").attr("disabled", true);
+          }
+        });
+
+        $('#crear').click(function () {
+          createBoard();
+          $(this).attr("disabled", true);
+          $("#empezarJuego").show();
+        });
+
+        $('#empezarJuego').click(function () {
+          hideImages();
+          shuffleImages();
+        });
+
+        $(document).on('click', '.card', function () {
+          if (bloquearClick) {
+            return;
+          }
+
+          var index = $(this).data('index');
+          var image = imagesArray[index];
+
+          if ($(this).hasClass('visible')) {
+            return;
+          }
+
+          $(this).css('background-image', 'url("' + image + '")');
+          $(this).css('background-size', '100px 100px');
+          $(this).addClass('visible');
+          seleccionadas.push({
+            element: $(this),
+            image: image
+          });
+
+          if (seleccionadas.length === 2) {
+            bloquearClick = true;
+            setTimeout(function () {
+              if (seleccionadas[0].image === seleccionadas[1].image) {
+                seleccionadas[0].element.addClass('encontrada');
+                seleccionadas[1].element.addClass('encontrada');
+              } else {
+                seleccionadas[0].element.css('background-image', '');
+                seleccionadas[1].element.css('background-image', '');
+                seleccionadas[0].element.removeClass('visible');
+                seleccionadas[1].element.removeClass('visible');
+              }
+              seleccionadas = [];
+              bloquearClick = false;
+            }, 1000);
+          }
+        });
+
+        function createBoard() {
+          var totalImages = imagesArray.length;
+          var rows = 0;
+          var columns = 0;
+
+          // Calcular el número de filas y columnas
+          if (Math.sqrt(totalImages) % 1 === 0) {
+            // Si el número de imágenes es un cuadrado perfecto, distribuir en una cuadrícula cuadrada
+            rows = Math.sqrt(totalImages);
+            columns = rows;
+          } else {
+            // Si el número de imágenes no es un cuadrado perfecto, distribuir en una cuadrícula rectangular
+            for (var i = 1; i <= Math.ceil(Math.sqrt(totalImages)); i++) {
+              if (totalImages % i === 0) {
+                rows = i;
+                columns = totalImages / i;
+              }
+            }
+          }
+
+          // Asegurar que el número de columnas sea impar si el tablero es rectangular
+          if (rows !== columns && columns % 2 === 0) {
+            var temp = rows;
+            rows = columns;
+            columns = temp;
+          }
+
+          filas = rows;
+          columnas = columns;
+
+          // Crear las tarjetas del juego
+          var cardIndex = 0;
+          var tablero = $('#tablero');
+          for (var r = 0; r < rows; r++) {
+            var fila = $('<div class="row"></div>');
+            for (var c = 0; c < columns; c++) {
+              var columna = $('<div class="col card"></div>');
+              columna.css('padding-top', (100 / columnas) + '%');
+              columna.data('index', cardIndex++);
+              fila.append(columna);
+
+            }
+            tablero.append(fila);
+          }
+        }
+
+        function hideImages() {
+          var cards = $('.card');
+          cards.css('background-image', '');
+          cards.removeClass('visible');
+          cards.removeClass('encontrada');
+        }
+        function createBoard() {
+          var tablero = $('#tablero');
+          var card = $('<div class="col card"></div>');
+          card.css('padding-top', '100%');
+          tablero.append(card);
+        }
+
+        function shuffleImages() {
+          var cards = $('.card');
+          cards.each(function () {
+            var randomPosition = Math.floor(Math.random() * imagesArray.length);
+            $(this).css('background-image', 'url("' + imagesArray[randomPosition] + '")');
+            $(this).css('background-size', '100% 100%');
+            imagesArray.splice(randomPosition, 1);
+          });
+        }
+      });
+    </script>
+    </body>
+</html>
