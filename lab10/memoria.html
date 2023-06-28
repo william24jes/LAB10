@@ -5,6 +5,32 @@
         <title>Title</title>
     </head>
     <body>
+        <input type="file" id="imageInput" accept=".png" multiple/>
+        <button id="uploadButton">Subir imágenes</button>
+        <div id="imagesContainer"></div>
+
+        <script>
+            $(document).ready(function() {
+                var imagesArray = [];
+
+                $('#uploadButton').click(function() {
+                    var files = $('#imageInput').get(0).files;
+                    if (files.length > 0 && files.length <= 15) {
+                        for (var i = 0; i < files.length; i++) {
+                            var file = files[i];
+                            var reader = new FileReader();
+                            reader.onload = function(e) {
+                                imagesArray.push(e.target.result);
+                                $('#imagesContainer').append('<img src="' + e.target.result + '" />');
+                            }
+                            reader.readAsDataURL(file);
+                        }
+                    } else {
+                        alert('El número de imágenes debe ser entre 1 y 15');
+                    }
+                });
+            });
+        </script>
 
     </body>
 </html>
