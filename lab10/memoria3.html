@@ -196,24 +196,19 @@
 
       // Si el número de imágenes es un cuadrado perfecto
       if (Math.sqrt(n) % 1 === 0) {
-        cols = Math.sqrt(n);
-        rows = Math.sqrt(n);
+        rows = cols = Math.sqrt(n);
       } else {
-        rows = Math.ceil(Math.sqrt(n));
-        cols = Math.ceil(n / rows);
-      }
+        // Si no es un cuadrado perfecto, busca la disposición más cercana a un cuadrado
+        // tal que el número de filas sea mayor o igual que el número de columnas
+        cols = Math.floor(Math.sqrt(n));
+        rows = Math.ceil(n / cols);
 
-      // Asegurarse de que el número de columnas siempre sea par. Si no, aumentar en uno.
-      if (cols % 2 !== 0) {
-        cols += 1;
-        rows = n / cols;
-      }
-
-      // Si filas son menos que columnas, intercambiar
-      if (rows < cols) {
-        var temp = cols;
-        cols = rows;
-        rows = temp;
+        // Si las filas son menos que las columnas, intercambiar
+        if (rows < cols) {
+          var temp = cols;
+          cols = rows;
+          rows = temp;
+        }
       }
 
       return [rows, cols];
