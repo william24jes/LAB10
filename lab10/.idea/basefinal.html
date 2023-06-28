@@ -9,8 +9,8 @@
         crossorigin="anonymous">
   <style>
     .card {
-      width: 150px; /*era 100px*/
-      height: 150px; /*era 100px*/
+      width: 150px;
+      height: 150px;
       background-color: blue;
       margin: 5px;
       display: inline-flex;
@@ -33,7 +33,7 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      height: 70vh; /*ajusta esto según tus necesidades*/
+      height: 70vh;
     }
   </style>
 </head>
@@ -48,6 +48,7 @@
   </div>
   <button id="subir" class="btn btn-primary">Subir imágenes</button>
   <button id="crear" class="btn btn-success" disabled>Crear tablero</button>
+  <button id="aleatorizar" class="btn btn-warning" disabled>Aleatorizar</button>
 </div>
 
 <div class="container mt-4">
@@ -67,6 +68,7 @@
     var max = 15;
     var lastTwoCards = [];
     var lockCards = false;
+    var gameStarted = false; // Variable to track if the game has started
 
     $('#subir').click(function () {
       var files = $('#imagenInput').get(0).files;
@@ -98,7 +100,6 @@
       } else {
         alert('Por favor, selecciona entre 1 y ' + max + ' imágenes.');
       }
-      console.log("el numero de objetos en el array es :" + imagesArray.length)
     });
 
     $(document).on('click', '.borrar', function () {
@@ -139,13 +140,28 @@
       var shuffledImages = imagesArray.concat(imagesArray);
       shuffleArray(shuffledImages);
       createBoard(shuffledImages);
+      $("#aleatorizar").attr("disabled", false); // Enable the "Aleatorizar" button after board creation
       $("#empezarJuego").css("display", "block"); // Show "Empezar Juego" button after board creation
     });
-    $("#empezarJuego").click(function () {
-      gameStarted = true; // game is started
-      $('.card img').hide(); // Hide all cards
-      lockCards = false; // Unlock all cards
-      lastTwoCards = []; // Clear last two opened cards
+
+    $('#aleatorizar').click(function () {
+      var cards = $('.card');
+      var randomizedIndices = generateRandomIndices(cards.length);
+
+      cards.each(function (index) {
+        var image = $(this).find('img');
+        if (!image.is(':visible')) {
+          var randomizedIndex = randomizedIndices[index];
+          var targetCard = cards.eq(randomizedIndex);
+          var targetImage = targetCard.find('img');
+
+          if (!targetImage.is(':visible')) {
+            var tempSrc = image.attr('src');
+            image.attr('src', targetImage.attr('src'));
+            targetImage.attr('src', tempSrc);
+          }
+        }
+      });
     });
 
     function createBoard(images) {
@@ -167,7 +183,6 @@
 
       $('.card').click(function () {
         if (!gameStarted || lockCards) return; // Don't process click if game is not started or cards are locked
-        if (lockCards) return;
 
         var img = $(this).find('img');
         img.show();
@@ -208,6 +223,21 @@
       }
     }
 
+    function generateRandomIndices(length) {
+      var indices = [];
+      for (var i = 0; i < length; i++) {
+        indices.push(i);
+      }
+      shuffleArray(indices);
+      return indices;
+    }
+
+    $("#empezarJuego").click(function () {
+      gameStarted = true; // Set gameStarted to true
+      $(".card img").hide(); // Hide all cards
+      lockCards = false; // Unlock all cards
+      lastTwoCards = []; // Clear last two opened cards
+    });
   });
 </script>
 </body>
