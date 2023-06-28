@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Juego de Memoria</title>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-validate/1.19.1/jquery.validate.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+        crossorigin="anonymous">
+  <style>
+    .card {
+      width: 50px;
+      height: 50px;
+      background-color: blue;
+      margin: 5px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card img {
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-4">
+  <h1>El Juego de la Memoria</h1>
+  <br>
+  <h6>Total de imágenes seleccionadas: <span id="numero">0</span></h6>
+  <div class="custom-file mb-3">
+    <input type="file" class="custom-file-input" id="imagenInput" accept=".png" multiple>
+    <label class="custom-file-label" for="imagenInput">Seleccionar imágenes...</label>
+  </div>
+  <button id="subir" class="btn btn-primary">Subir imágenes</button>
+  <button id="crear" class="btn btn-success" disabled>Crear tablero</button>
+</div>
+
+<div class="container mt-4">
+  <div id="imagenesGuardadas" class="row"></div>
+</div>
+
+<div class="container mt-4">
+  <button id="empezarJuego" class="btn btn-primary" style="display: none;">Empezar juego</button>
+  <div id="tablero"></div>
+</div>
+
+<script>
+  $(document).ready(function () {
+    var imagesArray = [];
+    var max = 15;
+
+    $('#subir').click(function () {
+      var files = $('#imagenInput').get(0).files;
+      if (files.length > 0 && files.length <= max) {
+        var addedImagesCount = 0;
+        for (var i = 0; i < files.length; i++) {
+          var file = files[i];
+          if (file.type !== 'image/png') {
+            alert('Por favor, selecciona solo archivos en formato PNG.');
+            continue;
+          }
+          var reader = new FileReader();
+          reader.onload = (function (file) {
+            return function (e) {
+              var image = e.target.result;
+              if (!imagesArray.includes(image)) {
+                imagesArray.push(image);
+                addedImagesCount++;
+                $('#imagenesGuardadas').append('<div class="col-4"><button style="height: 30px;width: 30px" class="borrar" data-id="' + (imagesArray.length - 1) + '">X</button><img class="img-fluid" src="' + image + '" ></div>');
+              }
+              updateSelectedImagesCount(); // Actualizar el número de imágenes seleccionadas
+              if (addedImagesCount === files.length) {
+                updateCreateButtonState();
+              }
+            };
+          })(file);
+          reader.readAsDataURL(file);
+        }
+      } else {
+        alert('Por favor, selecciona entre 1 y ' + max + ' imágenes.');
+      }
+    });
+    $(document).on('click', '.borrar', function () {
+      var id = $(this).data('id');
+      imagesArray.splice(id, 1); // Eliminar la imagen del arreglo
+      $(this).parent().remove();
+      updateSelectedImagesCount();
+      updateCreateButtonState();
+
+      // Actualizar los valores de data-id en los botones de borrado
+      $('.borrar').each(function(index) {
+        $(this).data('id', index);
+      });
+    });
+
+    function updateSelectedImagesCount() {
+      var uniqueImagesCount = getUniqueImageCount(imagesArray);
+      $('#numero').text(uniqueImagesCount);
+    }
+
+    function updateCreateButtonState() {
+      if (imagesArray.length >= 2 && imagesArray.length <= max) {
+        $("#crear").attr("disabled", false);
+      } else {
+        $("#crear").attr("disabled", true);
+      }
+    }
+
+    function getUniqueImageCount(arr) {
+      var uniqueImages = [];
+      for (var i = 0; i < arr.length; i++) {
+        if (uniqueImages.indexOf(arr[i]) === -1) {
+          uniqueImages.push(arr[i]);
+        }
+      }
+      return uniqueImages.length;
+    }
+  });
+
+</script>
+</body>
+</html>
