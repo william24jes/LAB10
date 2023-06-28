@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Juego de Memoria</title>
+  <script src="https://code.jquery.com/jquery-3.3.1.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC"
+        crossorigin="anonymous">
+  <style>
+    .card {
+      width: 200px;
+      height: 200px;
+      background-color: blue;
+      margin: 5px;
+      display: inline-block;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #tablero {
+      margin: auto;
+    }
+  </style>
+</head>
+<body>
+<div class="container mt-4">
+  <h1>El Juego de la Memoria</h1>
+  <br>
+  <h6>Total de imágenes seleccionadas: <span id="numero">0</span></h6>
+  <div class="custom-file mb-3">
+    <input type="file" class="custom-file-input" id="imagenInput" accept=".png" multiple>
+    <label class="custom-file-label" for="imagenInput">Seleccionar imágenes...</label>
+  </div>
+  <button id="subir" class="btn btn-primary">Subir imágenes</button>
+  <button id="crear" class="btn btn-success" disabled>Crear tablero</button>
+</div>
+
+<div class="container mt-4">
+  <div id="imagenesGuardadas" class="row"></div>
+</div>
+
+<div class="container mt-4">
+  <button id="empezarJuego" class="btn btn-primary" style="display: none;">Empezar juego</button>
+  <div id="tablero"></div>
+</div>
+
+<script>
+  $(document).ready(function () {
+    var imagesArray = [];
+    var shuffledImages = [];
+    var max = 15;
+    var cantidad = 0;
+    var seleccionadas = [];
+    var bloquearClick = false;
+
+    $('#subir').click(function () {
+      var files = $('#imagenInput').get(0).files;
+      var numFiles = files.length;
+      if (numFiles > 0 && numFiles <= max) {
+        for (var i = 0; i < numFiles; i++) {
+          var file = files[i];
+          var reader = new FileReader();
+          reader.onload = function (e) {
+            // Verificar si la imagen ya existe
+            if (!imagesArray.includes(e.target.result)) {
+              imagesArray.push(e.target.result);
+              imagesArray.push(e.target.result); // Agregar una duplicada
+              $('#imagenesGuardadas').append('<div class="col-4"><button style="height: 30px;width: 30px" class="borrar" data-id="' + (cantidad * 2) + '">X</button><img class="img-fluid" src="' + e.target.result + '" ></div>');
+              cantidad += 1;
+              $('#numero').text(cantidad);
+            }
+            enableOrDisableCreateButton();
+          };
+          reader.readAsDataURL(file);
+        }
+      } else {
+        alert('El número de imágenes debe ser entre 1 y ' + max);
+      }
+    });
+    $(document).on('change', '#imagenInput', function() {
+      setTimeout(function() {
+        if (cantidad * 2 >= 2 && cantidad * 2 <= max) {
+          $("#crear").attr("disabled", false);
+        } else {
+          $("#crear").attr("disabled", true);
+        }
+      }, 500); // Esperar a que todas las imágenes se hayan cargado
+    });
+
+    $(document).on('click', '.borrar', function () {
+      var id = $(this).data('id');
+      imagesArray.splice(id, 2); // Eliminar tanto la imagen como su duplicado
+      $(this).parent().remove();
+      cantidad--;
+      $('#numero').text(cantidad);
+
+      if (cantidad * 2 < 2 || cantidad * 2 > max) {
+        $("#crear").attr("disabled", true);
+      }
+      enableOrDisableCreateButton();
+    });
+    function enableOrDisableCreateButton() {
+      if (imagesArray.length >= 2 && imagesArray.length <= max * 2) {
+        $("#crear").attr("disabled", false);
+      } else {
+        $("#crear").attr("disabled", true);
+      }
+    }
+
+    $('#crear').click(function () {
+      shuffledImages = shuffleImages(imagesArray);
+      createBoard();
+      $(this).attr("disabled", true);
+      $("#empezarJuego").show();
+    });
+
+    $('#empezarJuego').click(function () {
+      hideImages();
+      shuffledImages = shuffleImages(imagesArray);
+    });
+
+    $(document).on('click', '.card', function () {
+      if (bloquearClick) {
+        return;
+      }
+
+      var index = $(this).data('index');
+      var image = shuffledImages[index];
+
+      if ($(this).hasClass('visible')) {
+        return;
+      }
+
+      $(this).css('background-image', 'url("' + image + '")');
+      $(this).css('background-size', '100px 100px');
+      $(this).addClass('visible');
+      seleccionadas.push({
+        element: $(this),
+        image: image
+      });
+
+      if (seleccionadas.length === 2) {
+        bloquearClick = true;
+        setTimeout(function () {
+          if (seleccionadas[0].image === seleccionadas[1].image) {
+            seleccionadas[0].element.addClass('encontrada');
+            seleccionadas[1].element.addClass('encontrada');
+          } else {
+            seleccionadas[0].element.css('background-image', '');
+            seleccionadas[1].element.css('background-image', '');
+            seleccionadas[0].element.removeClass('visible');
+            seleccionadas[1].element.removeClass('visible');
+          }
+          seleccionadas = [];
+          bloquearClick = false;
+        }, 1000);
+      }
+    });
+
+    function createBoard() {
+      var totalImages = shuffledImages.length;
+      var rows = Math.ceil(Math.sqrt(totalImages));
+      var columns = Math.ceil(totalImages / rows);
+
+      var cardIndex = 0;
+      var tablero = $('#tablero');
+      tablero.empty(); // Limpiar el tablero antes de rellenarlo
+      for (var r = 0; r < rows; r++) {
+        var fila = $('<div class="row"></div>');
+        for (var c = 0; c < columns; c++) {
+          if (cardIndex < totalImages) { // Asegurarse de no agregar más cuadros de los necesarios
+            var columna = $('<div class="col card"></div>');
+            columna.css('padding-top', (100 / columns) + '%');
+            columna.data('index', cardIndex++);
+            fila.append(columna);
+          }
+        }
+        tablero.append(fila);
+      }
+    }
+
+    function hideImages() {
+      var cards = $('.card');
+      cards.css('background-image', '');
+      cards.removeClass('visible');
+      cards.removeClass('encontrada');
+    }
+
+    function shuffleImages(array) {
+      var shuffledArray = [...array]; // Clonar el array
+      shuffledArray.sort(() => Math.random() - 0.5); // Mezclar el array
+      return shuffledArray;
+    }
+  });
+</script>
+</body>
+</html>
