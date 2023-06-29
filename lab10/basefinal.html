@@ -222,7 +222,7 @@
     }
     $('#empezarJuego').click(function () {
       gameStarted = true;
-      $('.card').click(function () {
+     /* $('.card').click(function () {
         if (!gameStarted || lockCards) return; // Don't process click if game is not started or cards are locked
 
         var img = $(this).find('img');
@@ -246,8 +246,52 @@
             }, 1000);
           }
         }
+      });*/
+      $('.card').click(function () {
+        if (!gameStarted || lockCards) return; // Don't process click if game is not started or cards are locked
+
+        var img = $(this).find('img');
+        img.show();
+
+        lastTwoCards.push(img);
+
+        if (lastTwoCards.length === 2) {
+          lockCards = true;
+          if (lastTwoCards[0].attr('src') === lastTwoCards[1].attr('src')) {
+            // If match, stay open
+            lastTwoCards = [];
+            lockCards = false;
+
+            if (checkAllCardsMatched()) {
+              setTimeout(resetGame, 1000); // Delay to let user see the final state
+            }
+          } else {
+            // If not match, close after 1 second
+            setTimeout(function () {
+              lastTwoCards[0].hide();
+              lastTwoCards[1].hide();
+              lastTwoCards = [];
+              lockCards = false;
+            }, 1000);
+          }
+        }
       });
+
     });
+    function resetGame() {
+      gameStarted = false;
+      helpUsed = 0;
+      $('#ayudaButton').text('Ayuda (2)');
+      $('#ayudaButton').attr('disabled', true);
+      $('#empezarJuego').hide();
+      $("#aleatorizar").attr("disabled", true);
+      imagesArray = [];
+      $('#imagenesGuardadas').empty();
+      $('#tablero').empty();
+      updateSelectedImagesCount();
+      updateCreateButtonState();
+    }
+
 
     function createBoard(images) {
       var dimensions = getBoardDimensions(images.length);
@@ -289,6 +333,17 @@
       }
       shuffleArray(indices);
       return indices;
+    }
+    function checkAllCardsMatched() {
+      var allMatched = true;
+      $('.card').each(function () {
+        var img = $(this).find('img');
+        if (!img.is(':visible')) {
+          allMatched = false;
+          return false; // break the loop
+        }
+      });
+      return allMatched;
     }
   });
 </script>
