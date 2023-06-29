@@ -48,8 +48,7 @@
   </div>
   <button id="subir" class="btn btn-primary">Subir imágenes</button>
   <button id="crear" class="btn btn-success" disabled>Crear tablero</button>
-  <button id="aleatorizar" class="btn btn-warning" disabled>Aleatorizar</button>
-  <button id="ayudaButton" class="btn btn-danger" disabled>Ayuda (2)</button>
+
 </div>
 
 <div class="container mt-4">
@@ -58,6 +57,9 @@
 
 <div class="container mt-4">
   <button id="empezarJuego" class="btn btn-primary" style="display: none;">Empezar juego</button>
+  <br>
+  <button id="aleatorizar" class="btn btn-warning" disabled>Aleatorizar</button>
+  <button id="ayudaButton" class="btn btn-danger" disabled>Ayuda (2)</button>
   <div id="boardContainer">
     <div id="tablero"></div>
   </div>
@@ -65,12 +67,12 @@
 
 <script>
   $(document).ready(function () {
-    var imagesArray = [];
+    var fotosArray = [];
     var max = 15;
-    var lastTwoCards = [];
+    var ultimasDosCards = [];
     var lockCards = false;
-    var gameStarted = false; // Variable to track if the game has started
-    var helpUsed = 0; // Variable to track the number of times "Ayuda" button is used
+    var juegoEmpezado = false;
+    var ayudaUsada = 0;
 
     $('#subir').click(function () {
       var files = $('#imagenInput').get(0).files;
@@ -86,14 +88,14 @@
           reader.onload = (function (file) {
             return function (e) {
               var image = e.target.result;
-              if (!imagesArray.includes(image)) {
-                imagesArray.push(image);
+              if (!fotosArray.includes(image)) {
+                fotosArray.push(image);
                 addedImagesCount++;
-                $('#imagenesGuardadas').append('<div class="col-4"><button style="height: 30px;width: 30px" class="borrar" data-id="' + (imagesArray.length - 1) + '">X</button><img class="img-fluid" src="' + image + '" ></div>');
+                $('#imagenesGuardadas').append('<div class="col-4"><button style="height: 30px;width: 30px" class="borrar" data-id="' + (fotosArray.length - 1) + '">X</button><img class="img-fluid" src="' + image + '" ></div>');
               }
-              updateSelectedImagesCount();
+              actualizarContadorDeImagenesSeleccionadas();
               if (addedImagesCount === files.length) {
-                updateCreateButtonState();
+                actualizarEstadoBotonCrear();
               }
             };
           })(file);
@@ -106,50 +108,50 @@
 
     $(document).on('click', '.borrar', function () {
       var id = $(this).data('id');
-      imagesArray.splice(id, 1);
+      fotosArray.splice(id, 1);
       $(this).parent().remove();
-      updateSelectedImagesCount();
-      updateCreateButtonState();
+      actualizarContadorDeImagenesSeleccionadas();
+      actualizarEstadoBotonCrear();
       $('.borrar').each(function (index) {
         $(this).data('id', index);
       });
     });
 
-    function updateSelectedImagesCount() {
-      var uniqueImagesCount = getUniqueImageCount(imagesArray);
-      $('#numero').text(uniqueImagesCount);
+    function actualizarContadorDeImagenesSeleccionadas() {
+      var contadorDeImagenUnica = obtenerContadorDeImagenUnica(fotosArray);
+      $('#numero').text(contadorDeImagenUnica);
     }
 
-    function updateCreateButtonState() {
-      if (imagesArray.length >= 2 && imagesArray.length <= max) {
+    function actualizarEstadoBotonCrear() {
+      if (fotosArray.length >= 2 && fotosArray.length <= max) {
         $("#crear").attr("disabled", false);
       } else {
         $("#crear").attr("disabled", true);
       }
     }
 
-    function getUniqueImageCount(arr) {
-      var uniqueImages = [];
+    function obtenerContadorDeImagenUnica(arr) {
+      var fotosUnicas = [];
       for (var i = 0; i < arr.length; i++) {
-        if (uniqueImages.indexOf(arr[i]) === -1) {
-          uniqueImages.push(arr[i]);
+        if (fotosUnicas.indexOf(arr[i]) === -1) {
+          fotosUnicas.push(arr[i]);
         }
       }
-      return uniqueImages.length;
+      return fotosUnicas.length;
     }
 
     $('#crear').click(function () {
-      var shuffledImages = imagesArray.concat(imagesArray);
-      shuffleArray(shuffledImages);
-      createBoard(shuffledImages);
-      $("#aleatorizar").attr("disabled", false); // Enable the "Aleatorizar" button after board creation
-      $("#ayudaButton").attr("disabled", false); // Enable the "Ayuda" button after board creation
-      $("#empezarJuego").css("display", "block"); // Show "Empezar Juego" button after board creation
+      var fotosMezcladas = fotosArray.concat(fotosArray);
+      aleatorizarArray(fotosMezcladas);
+      crearTablero(fotosMezcladas);
+      $("#aleatorizar").attr("disabled", false);
+      $("#ayudaButton").attr("disabled", false);
+      $("#empezarJuego").css("display", "block");
     });
 
     $('#aleatorizar').click(function () {
       var cards = $('.card');
-      var randomizedIndices = generateRandomIndices(cards.length);
+      var randomizedIndices = generarIndicesAleatorios(cards.length);
 
       cards.each(function (index) {
         var image = $(this).find('img');
@@ -168,109 +170,75 @@
     });
 
     $('#ayudaButton').click(function () {
-      if (helpUsed < 2) {
+      if (ayudaUsada < 2) {
         var cards = $('.card:not(.help)');
-        var availableImages = {};
+        var fotosDisponibles = {};
         cards.each(function (index) {
           var img = $(this).find('img');
           if (!img.is(':visible')) {
             var imgSrc = img.attr('src');
-            if (availableImages[imgSrc]) {
-              availableImages[imgSrc].push(index);
+            if (fotosDisponibles[imgSrc]) {
+              fotosDisponibles[imgSrc].push(index);
             } else {
-              availableImages[imgSrc] = [index];
+              fotosDisponibles[imgSrc] = [index];
             }
           }
         });
 
-        // Find an image that has at least two cards
-        var selectedIndices = null;
-        for (var imgSrc in availableImages) {
-          if (availableImages[imgSrc].length >= 2) {
-            selectedIndices = availableImages[imgSrc].slice(0, 2); // get the first two indices
+        var IndSeleccionados = null;
+        for (var imgSrc in fotosDisponibles) {
+          if (fotosDisponibles[imgSrc].length >= 2) {
+            IndSeleccionados = fotosDisponibles[imgSrc].slice(0, 2);
             break;
           }
         }
 
-        if (selectedIndices) {
-          var img1 = cards.eq(selectedIndices[0]).find('img');
-          var img2 = cards.eq(selectedIndices[1]).find('img');
+        if (IndSeleccionados) {
+          var img1 = cards.eq(IndSeleccionados[0]).find('img');
+          var img2 = cards.eq(IndSeleccionados[1]).find('img');
 
           img1.show();
           img2.show();
           img1.parent().addClass('help');
           img2.parent().addClass('help');
 
-          helpUsed++;
-          $('#ayudaButton').text('Ayuda (' + (2 - helpUsed) + ')');
+          ayudaUsada++;
+          $('#ayudaButton').text('Ayuda (' + (2 - ayudaUsada) + ')');
 
-          if (helpUsed >= 2) {
+          if (ayudaUsada >= 2) {
             $('#ayudaButton').attr('disabled', true);
           }
         }
       }
     });
-
-
-    function getRandomIndices(length, count) {
-      var indices = [];
-      for (var i = 0; i < length; i++) {
-        indices.push(i);
-      }
-      shuffleArray(indices);
-      return indices.slice(0, count);
-    }
+    
     $('#empezarJuego').click(function () {
-      gameStarted = true;
-     /* $('.card').click(function () {
-        if (!gameStarted || lockCards) return; // Don't process click if game is not started or cards are locked
-
-        var img = $(this).find('img');
-        img.show();
-
-        lastTwoCards.push(img);
-
-        if (lastTwoCards.length === 2) {
-          lockCards = true;
-          if (lastTwoCards[0].attr('src') === lastTwoCards[1].attr('src')) {
-            // If match, stay open
-            lastTwoCards = [];
-            lockCards = false;
-          } else {
-            // If not match, close after 1 second
-            setTimeout(function () {
-              lastTwoCards[0].hide();
-              lastTwoCards[1].hide();
-              lastTwoCards = [];
-              lockCards = false;
-            }, 1000);
-          }
-        }
-      });*/
+      juegoEmpezado = true;
+     
       $('.card').click(function () {
-        if (!gameStarted || lockCards) return; // Don't process click if game is not started or cards are locked
+        if (!juegoEmpezado || lockCards) return;
 
         var img = $(this).find('img');
         img.show();
 
-        lastTwoCards.push(img);
+        ultimasDosCards.push(img);
 
-        if (lastTwoCards.length === 2) {
+        if (ultimasDosCards.length === 2) {
           lockCards = true;
-          if (lastTwoCards[0].attr('src') === lastTwoCards[1].attr('src')) {
-            // If match, stay open
-            lastTwoCards = [];
+          if (ultimasDosCards[0].attr('src') === ultimasDosCards[1].attr('src')) {
+            
+            ultimasDosCards = [];
             lockCards = false;
 
-            if (checkAllCardsMatched()) {
-              setTimeout(resetGame, 1000); // Delay to let user see the final state
+            if (verificarCartasEncontradas()) {
+              setTimeout(reiniciarJuego, 1000);
             }
           } else {
-            // If not match, close after 1 second
+            
             setTimeout(function () {
-              lastTwoCards[0].hide();
-              lastTwoCards[1].hide();
-              lastTwoCards = [];
+              ultimasDosCards[0].hide();
+              ultimasDosCards[1].hide();
+              ultimasDosCards = [];
               lockCards = false;
             }, 1000);
           }
@@ -278,40 +246,40 @@
       });
 
     });
-    function resetGame() {
-      gameStarted = false;
-      helpUsed = 0;
+    function reiniciarJuego() {
+      juegoEmpezado = false;
+      ayudaUsada = 0;
       $('#ayudaButton').text('Ayuda (2)');
       $('#ayudaButton').attr('disabled', true);
       $('#empezarJuego').hide();
       $("#aleatorizar").attr("disabled", true);
-      imagesArray = [];
+      fotosArray = [];
       $('#imagenesGuardadas').empty();
       $('#tablero').empty();
-      updateSelectedImagesCount();
-      updateCreateButtonState();
+      actualizarContadorDeImagenesSeleccionadas();
+      actualizarEstadoBotonCrear();
     }
 
 
-    function createBoard(images) {
-      var dimensions = getBoardDimensions(images.length);
-      var rows = dimensions[0];
-      var cols = dimensions[1];
-      for (var i = 0; i < rows; i++) {
-        var row = $('<div class="row"></div>');
-        for (var j = 0; j < cols; j++) {
+    function crearTablero(images) {
+      var dimensiones = obtenerDimensionesTablero(images.length);
+      var filas = dimensiones[0];
+      var columnas = dimensiones[1];
+      for (var i = 0; i < filas; i++) {
+        var fila = $('<div class="row"></div>');
+        for (var j = 0; j < columnas; j++) {
           if (images.length > 0) {
             var card = $('<div class="card"></div>');
             var img = $('<img src="' + images.pop() + '">');
             card.append(img);
-            row.append(card);
+            fila.append(card);
           }
         }
-        $('#tablero').append(row);
+        $('#tablero').append(fila);
       }
     }
 
-    function getBoardDimensions(n) {
+    function obtenerDimensionesTablero(n) {
       var r = Math.floor(Math.sqrt(n));
       while (n % r !== 0) {
         r--;
@@ -319,31 +287,31 @@
       return [n / r, r];
     }
 
-    function shuffleArray(array) {
+    function aleatorizarArray(array) {
       for (var i = array.length - 1; i > 0; i--) {
         var j = Math.floor(Math.random() * (i + 1));
         [array[i], array[j]] = [array[j], array[i]];
       }
     }
 
-    function generateRandomIndices(length) {
+    function generarIndicesAleatorios(length) {
       var indices = [];
       for (var i = 0; i < length; i++) {
         indices.push(i);
       }
-      shuffleArray(indices);
+      aleatorizarArray(indices);
       return indices;
     }
-    function checkAllCardsMatched() {
-      var allMatched = true;
+    function verificarCartasEncontradas() {
+      var encontrados = true;
       $('.card').each(function () {
         var img = $(this).find('img');
         if (!img.is(':visible')) {
-          allMatched = false;
-          return false; // break the loop
+          encontrados = false;
+          return false;
         }
       });
-      return allMatched;
+      return encontrados;
     }
   });
 </script>
