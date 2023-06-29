@@ -49,6 +49,7 @@
   <button id="subir" class="btn btn-primary">Subir imágenes</button>
   <button id="crear" class="btn btn-success" disabled>Crear tablero</button>
   <button id="aleatorizar" class="btn btn-warning" disabled>Aleatorizar</button>
+  <button id="ayudaButton" class="btn btn-danger" disabled>Ayuda (2)</button>
 </div>
 
 <div class="container mt-4">
@@ -69,6 +70,7 @@
     var lastTwoCards = [];
     var lockCards = false;
     var gameStarted = false; // Variable to track if the game has started
+    var helpUsed = 0; // Variable to track the number of times "Ayuda" button is used
 
     $('#subir').click(function () {
       var files = $('#imagenInput').get(0).files;
@@ -141,46 +143,82 @@
       shuffleArray(shuffledImages);
       createBoard(shuffledImages);
       $("#aleatorizar").attr("disabled", false); // Enable the "Aleatorizar" button after board creation
+      $("#ayudaButton").attr("disabled", false); // Enable the "Ayuda" button after board creation
       $("#empezarJuego").css("display", "block"); // Show "Empezar Juego" button after board creation
     });
 
     $('#aleatorizar').click(function () {
-      var cards = $('.card');
-      var randomizedIndices = generateRandomIndices(cards.length);
-
-      cards.each(function (index) {
-        var image = $(this).find('img');
-        if (!image.is(':visible')) {
-          var randomizedIndex = randomizedIndices[index];
-          var targetCard = cards.eq(randomizedIndex);
-          var targetImage = targetCard.find('img');
-
-          if (!targetImage.is(':visible')) {
-            var tempSrc = image.attr('src');
-            image.attr('src', targetImage.attr('src'));
-            targetImage.attr('src', tempSrc);
-          }
-        }
-      });
+      var shuffledImages = randomizeImages(imagesArray);
+      createBoard(shuffledImages);
     });
 
-    function createBoard(images) {
-      var dimensions = getBoardDimensions(images.length);
-      var rows = dimensions[0];
-      var cols = dimensions[1];
-      for (var i = 0; i < rows; i++) {
-        var row = $('<div class="row"></div>');
-        for (var j = 0; j < cols; j++) {
-          if (images.length > 0) {
-            var card = $('<div class="card"></div>');
-            var img = $('<img src="' + images.pop() + '">');
-            card.append(img);
-            row.append(card);
-          }
-        }
-        $('#tablero').append(row);
+    function randomizeImages(array) {
+      var duplicatedImages = array.concat(array);
+      var randomizedImages = [];
+
+      while (duplicatedImages.length > 0) {
+        var randomIndex = Math.floor(Math.random() * duplicatedImages.length);
+        var randomImage = duplicatedImages.splice(randomIndex, 1)[0];
+        randomizedImages.push(randomImage);
       }
 
+      return randomizedImages;
+    }
+
+
+    $('#ayudaButton').click(function () {
+      if (helpUsed < 2) {
+        var cards = $('.card:not(.help)');
+        var availableIndices = [];
+        var visibleImages = [];
+
+        cards.each(function (index) {
+          var img = $(this).find('img');
+          if (!img.is(':visible')) {
+            availableIndices.push(index);
+          } else {
+            visibleImages.push(img.attr('src'));
+          }
+        });
+
+        if (availableIndices.length < 2) {
+          return;
+        }
+
+        var randomIndex = Math.floor(Math.random() * availableIndices.length);
+        var img1 = cards.eq(availableIndices[randomIndex]).find('img');
+        var img2;
+
+        do {
+          randomIndex = Math.floor(Math.random() * availableIndices.length);
+          img2 = cards.eq(availableIndices[randomIndex]).find('img');
+        } while (img1.attr('src') !== img2.attr('src') || visibleImages.includes(img1.attr('src')));
+
+        img1.show();
+        img2.show();
+        img1.parent().addClass('help');
+        img2.parent().addClass('help');
+
+        helpUsed++;
+        $('#ayudaButton').text('Ayuda (' + (2 - helpUsed) + ')');
+
+        if (helpUsed >= 2) {
+          $('#ayudaButton').attr('disabled', true);
+        }
+      }
+    });
+
+
+    function getRandomIndices(length, count) {
+      var indices = [];
+      for (var i = 0; i < length; i++) {
+        indices.push(i);
+      }
+      shuffleArray(indices);
+      return indices.slice(0, count);
+    }
+    $('#empezarJuego').click(function () {
+      gameStarted = true;
       $('.card').click(function () {
         if (!gameStarted || lockCards) return; // Don't process click if game is not started or cards are locked
 
@@ -206,6 +244,24 @@
           }
         }
       });
+    });
+
+    function createBoard(images) {
+      var dimensions = getBoardDimensions(images.length);
+      var rows = dimensions[0];
+      var cols = dimensions[1];
+      for (var i = 0; i < rows; i++) {
+        var row = $('<div class="row"></div>');
+        for (var j = 0; j < cols; j++) {
+          if (images.length > 0) {
+            var card = $('<div class="card"></div>');
+            var img = $('<img src="' + images.pop() + '">');
+            card.append(img);
+            row.append(card);
+          }
+        }
+        $('#tablero').append(row);
+      }
     }
 
     function getBoardDimensions(n) {
@@ -231,13 +287,6 @@
       shuffleArray(indices);
       return indices;
     }
-
-    $("#empezarJuego").click(function () {
-      gameStarted = true; // Set gameStarted to true
-      $(".card img").hide(); // Hide all cards
-      lockCards = false; // Unlock all cards
-      lastTwoCards = []; // Clear last two opened cards
-    });
   });
 </script>
 </body>
