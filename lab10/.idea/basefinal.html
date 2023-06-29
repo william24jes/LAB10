@@ -148,67 +148,68 @@
     });
 
     $('#aleatorizar').click(function () {
-      var shuffledImages = randomizeImages(imagesArray);
-      createBoard(shuffledImages);
+      var cards = $('.card');
+      var randomizedIndices = generateRandomIndices(cards.length);
+
+      cards.each(function (index) {
+        var image = $(this).find('img');
+        if (!image.is(':visible')) {
+          var randomizedIndex = randomizedIndices[index];
+          var targetCard = cards.eq(randomizedIndex);
+          var targetImage = targetCard.find('img');
+
+          if (!targetImage.is(':visible')) {
+            var tempSrc = image.attr('src');
+            image.attr('src', targetImage.attr('src'));
+            targetImage.attr('src', tempSrc);
+          }
+        }
+      });
     });
-
-    function randomizeImages(array) {
-      var duplicatedImages = array.concat(array);
-      var randomizedImages = [];
-
-      while (duplicatedImages.length > 0) {
-        var randomIndex = Math.floor(Math.random() * duplicatedImages.length);
-        var randomImage = duplicatedImages.splice(randomIndex, 1)[0];
-        randomizedImages.push(randomImage);
-      }
-
-      return randomizedImages;
-    }
-
 
     $('#ayudaButton').click(function () {
       if (helpUsed < 2) {
         var cards = $('.card:not(.help)');
-        var availableIndices = [];
-        var visibleImages = [];
-
+        var availableImages = {};
         cards.each(function (index) {
           var img = $(this).find('img');
           if (!img.is(':visible')) {
-            availableIndices.push(index);
-          } else {
-            visibleImages.push(img.attr('src'));
+            var imgSrc = img.attr('src');
+            if (availableImages[imgSrc]) {
+              availableImages[imgSrc].push(index);
+            } else {
+              availableImages[imgSrc] = [index];
+            }
           }
         });
 
-        if (availableIndices.length < 2) {
-          return;
+        // Find an image that has at least two cards
+        var selectedIndices = null;
+        for (var imgSrc in availableImages) {
+          if (availableImages[imgSrc].length >= 2) {
+            selectedIndices = availableImages[imgSrc].slice(0, 2); // get the first two indices
+            break;
+          }
         }
 
-        var randomIndex1 = Math.floor(Math.random() * availableIndices.length);
-        var randomIndex2;
-        var img1 = cards.eq(availableIndices[randomIndex1]).find('img');
-        var img2;
+        if (selectedIndices) {
+          var img1 = cards.eq(selectedIndices[0]).find('img');
+          var img2 = cards.eq(selectedIndices[1]).find('img');
 
-        do {
-          randomIndex2 = Math.floor(Math.random() * availableIndices.length);
-          img2 = cards.eq(availableIndices[randomIndex2]).find('img');
-        } while (randomIndex1 === randomIndex2 || img1.attr('src') !== img2.attr('src') || visibleImages.includes(img1.attr('src')));
+          img1.show();
+          img2.show();
+          img1.parent().addClass('help');
+          img2.parent().addClass('help');
 
-        img1.show();
-        img2.show();
-        img1.parent().addClass('help');
-        img2.parent().addClass('help');
+          helpUsed++;
+          $('#ayudaButton').text('Ayuda (' + (2 - helpUsed) + ')');
 
-        helpUsed++;
-        $('#ayudaButton').text('Ayuda (' + (2 - helpUsed) + ')');
-
-        if (helpUsed >= 2) {
-          $('#ayudaButton').attr('disabled', true);
+          if (helpUsed >= 2) {
+            $('#ayudaButton').attr('disabled', true);
+          }
         }
       }
     });
-
 
 
     function getRandomIndices(length, count) {
@@ -247,30 +248,6 @@
         }
       });
     });
-    function resetGame() {
-      // Restablecer variables
-      imagesArray = [];
-      lastTwoCards = [];
-      lockCards = false;
-      gameStarted = false;
-      helpUsed = 0;
-
-      // Reiniciar elementos del tablero
-      $('#tablero').empty();
-
-      // Restablecer botones
-      $("#crear").attr("disabled", false);
-      $("#aleatorizar").attr("disabled", true);
-      $("#ayudaButton").attr("disabled", true);
-      $('#ayudaButton').text('Ayuda (2)');
-      $('#ayudaButton').attr('disabled', false);
-
-      // Restablecer imágenes seleccionadas
-      updateSelectedImagesCount();
-
-      // Ocultar botón "Empezar juego"
-      $('#empezarJuego').hide();
-    }
 
     function createBoard(images) {
       var dimensions = getBoardDimensions(images.length);
@@ -289,9 +266,6 @@
         $('#tablero').append(row);
       }
     }
-    $('#resetButton').click(function () {
-      resetGame();
-    });
 
     function getBoardDimensions(n) {
       var r = Math.floor(Math.sqrt(n));
